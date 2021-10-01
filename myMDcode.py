@@ -105,6 +105,15 @@ class MD:
 		print('step no is ' + str(self.step) + ' and time is ' + str(self.t_sim))
 		print('U is ' + str(self.U) + ' and K is ' + str(self.K) + ' and total is ' + str(self.U + self.K)  + '\n')
 
+		print('vx at t= ' + str(self.t_sim) + ' is ' + str(self.momtmall[self.step,0]) + ' and vy is ' 
+						+ str(self.momtmall[self.step,1]) + ' and vz is ' + str(self.momtmall[self.step,2]))
+
+		print('x at t= ' + str(self.tall[0]) + ' is ' + str(self.comall[0,0]) + ' and y is ' 
+						+ str(self.comall[0,1]) + ' and z is ' + str(self.comall[0,2]))
+
+		print('x at t= ' + str(self.t_sim) + ' is ' + str(self.comall[self.step,0]) + ' and y is ' 
+						+ str(self.comall[self.step,1]) + ' and z is ' + str(self.comall[self.step,2]))
+
 		f.close()
 
 
@@ -115,18 +124,23 @@ class MD:
 		U = 0
 
 		for i in range(self.N):
-			for j in range(self.N):
-				if (j != i):
-					rij = np.sqrt((x[i,0]-x[j,0])**2 + (x[i,1]-x[j,1])**2 + (x[i,2]-x[j,2])**2) 
+			for j in range(i+1,self.N):
 
-					prefac = 48*np.power((1/rij),13) - 24*np.power((1/rij),7)
-					prefac2 = 4*(np.power((1/rij),12) - np.power((1/rij),6))
+				rij = np.sqrt((x[i,0]-x[j,0])**2 + (x[i,1]-x[j,1])**2 + (x[i,2]-x[j,2])**2) 
 
-					F[i,0] = F[i,0] + prefac*(x[i,0]-x[j,0])/rij
-					F[i,1] = F[i,1] + prefac*(x[i,1]-x[j,1])/rij
-					F[i,2] = F[i,2] + prefac*(x[i,2]-x[j,2])/rij
+				prefac = 48*((1/rij)**13) - 24*((1/rij)**7)
+				prefac2 = 4*((1/rij)**12 - (1/rij)**6)
 
-					U = U + 0.5*prefac2
+				F[i,0] = F[i,0] + prefac*(x[i,0]-x[j,0])/rij
+				F[i,1] = F[i,1] + prefac*(x[i,1]-x[j,1])/rij
+				F[i,2] = F[i,2] + prefac*(x[i,2]-x[j,2])/rij
+
+				if (j > i):
+					F[j,0] = F[j,0] - prefac*(x[i,0]-x[j,0])/rij
+					F[j,1] = F[j,1] - prefac*(x[i,1]-x[j,1])/rij
+					F[j,2] = F[j,2] - prefac*(x[i,2]-x[j,2])/rij
+
+				U = U + prefac2
 
 		return F,U;
 
@@ -178,18 +192,27 @@ class MD:
 		plt.plot(self.tall,self.Uall,'-r',label = 'U(t)')
 		plt.plot(self.tall,self.Kall,'-c',label = 'K(t)')
 		plt.plot(self.tall,self.Uall+self.Kall,'-g',label = 'H(t)')
+		plt.xlabel('time (t)')
+		plt.ylabel('Energies')
+		plt.title('Plot of various energies with time')
 		plt.legend()
 		plt.show()
 
-		plt.plot(self.tall,self.momtmall[:,0],'-r',label = 'v_x (t)')
-		plt.plot(self.tall,self.momtmall[:,1],'-c',label = 'v_y (t)')
-		plt.plot(self.tall,self.momtmall[:,2],'-g',label = 'v_z (t)')
+		plt.plot(self.tall,self.momtmall[:,0],'-r',label = 'p_x (t)')
+		plt.plot(self.tall,self.momtmall[:,1],'-c',label = 'p_y (t)')
+		plt.plot(self.tall,self.momtmall[:,2],'-g',label = 'p_z (t)')
+		plt.xlabel('time (t)')
+		plt.ylabel('Momentum in 3 direction')
+		plt.title('Plot of Momentum with time')
 		plt.legend()
 		plt.show()
 
 		plt.plot(self.tall,self.comall[:,0],'-r',label = 'x_c(t)')
 		plt.plot(self.tall,self.comall[:,1],'-c',label = 'y_c(t)')
 		plt.plot(self.tall,self.comall[:,2],'-g',label = 'z_c(t)')
+		plt.xlabel('time (t)')
+		plt.ylabel('Center of mass position')
+		plt.title('Plot of center of mass position with time')
 		plt.legend()
 		plt.show()
 
@@ -203,7 +226,7 @@ if __name__ == "__main__":
 
 	#local variables
 	dt = 0.002;
-	t_final = 10.0;
+	t_final = 20.0;
 	t_initial = 0.0;
 	step_no = 0
 
